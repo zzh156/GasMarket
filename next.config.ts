@@ -4,27 +4,21 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   reactCompiler: true, // 你原来开启的，保留
 
-  // 关键修复：让 Next.js 完全忽略所有 test 文件和无用依赖
+  // 关键修复：适配 Next.js 16 的新字段名
+  serverExternalPackages: ['pino', 'thread-stream', '@walletconnect'],
+
+  // 关闭 Turbopack 的 webpack 冲突报错（最优雅方式）
+  turbopack: {
+    // 什么都不写就行，代表“我知道你在用 Turbopack，我不报错了”
+  },
+
+  // 可选但强烈推荐：彻底忽略所有 test 文件（双保险）
   webpack: (config) => {
-    // 忽略所有 .test.ts / .test.js / .spec.ts 等测试文件
     config.module.rules.push({
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
       use: 'ignore-loader',
     })
-
-    // 可选但强烈推荐：额外忽略 thread-stream、pino 等库的测试目录
-    config.ignoreWarnings = [
-      ...(config.ignoreWarnings || []),
-      { module: /thread-stream\/test/ },
-      { module: /pino\/lib\/transport/ },
-    ]
-
     return config
-  },
-
-  // 更狠一招（可选）：告诉 Next.js 某些包永远只在服务端运行，SSR 不解析
-  experimental: {
-    serverComponentsExternalPackages: ['pino', 'thread-stream', '@walletconnect'],
   },
 }
 
